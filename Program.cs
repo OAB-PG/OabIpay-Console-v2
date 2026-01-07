@@ -16,9 +16,25 @@ namespace OAB
     {
         public static void Main(string[] args)
         {
-            Show("=====================================");
-            Show("  Welcome to Oman Arab Bank Oab Ipay v-2.1");
-            Show("=====================================");
+            Show("==================================================");
+            Show("  Welcome to Oman Arab Bank OAB iPay - Version 2");
+            Show("==================================================");
+            Show("Branch            : v1.2.0-beta.1");
+            Show("Supported .NET    : .NET 8.0");
+            Show("Release Date      : 2026-01-07");
+            Show("--------------------------------------------------");
+            Show("Features in this version:");
+            Show("  ✓ 2025-10-07 : JSON-based request and response for payment flow");
+            Show("  ✓ 2025-10-07 : Simple signed integration using Terminal credentials (Tranportal ID, Password, Resource Key)");
+            Show("  ✓ 2025-10-07 : Inquiry support via Track ID and Transaction ID");
+            Show("  ✓ 2025-10-07 : Refund processing using Transaction ID");
+            Show("  ✓ 2025-10-07 : Void transaction handling via Transaction ID");
+            Show("  ✓ 2025-10-07 : Refund directly to customer's bank account");
+            Show("  ✓ 2025-10-10 : Additional User Defined Values included");
+            Show("  ✓ 2025-12-24 : Payment callback response now includes masked card number and card type");
+            Show("--------------------------------------------------");
+            Show("Please use this library to access version 2 features.");
+            Show("Ensure all requests and responses follow the new structure.");
 
         }
 

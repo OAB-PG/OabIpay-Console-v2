@@ -107,13 +107,37 @@ namespace OAB
         public string TrackId { get; set; }
         public string Trackid { get; set; }
         public string TransId { get; set; }
-        public string TokenNo { get; set; }
+        public string TokenNumber { get; set; }
         public string TokenFlag { get; set; }
         public string Udf1 { get; set; }
         public string Udf2 { get; set; }
         public string Udf3 { get; set; }
         public string Udf4 { get; set; }
         public string Udf5 { get; set; }
+        public string Udf6 { get; set; }
+        public string Udf7 { get; set; }
+        public string Udf8 { get; set; }
+        public string Udf9 { get; set; }
+        public string Udf10 { get; set; }
+        public string Udf11 { get; set; }
+        public string Udf12 { get; set; }
+        public string Udf13 { get; set; }
+        public string Udf14 { get; set; }
+        public string Udf15 { get; set; }
+        public string Udf16 { get; set; }
+        public string Udf17 { get; set; }
+        public string Udf18 { get; set; }
+        public string Udf19 { get; set; }
+        public string Udf20 { get; set; }
+        public string country { get; set; }
+        public string purpose { get; set; }
+        public string refundAccIdentifier { get; set; }
+        public string receiverName { get; set; }
+        public string swiftBankId { get; set; }
+        public string branch { get; set; }
+        public string location { get; set; }
+        public string reveiverAccount { get; set; }
+
         public string CurrencyCode { get; set; }
         public string Currencycode { get; set; }
         public string LangId { get; set; }
@@ -158,12 +182,31 @@ namespace OAB
         public string Result { get; set; }
         public string PaymentId { get; set; }
         public string TranId { get; set; }
+        public string TokenNo { get; set; }
         public string Date { get; set; }
         public string Udf1 { get; set; }
         public string Udf2 { get; set; }
         public string Udf3 { get; set; }
         public string Udf4 { get; set; }
         public string Udf5 { get; set; }
+        public string Udf6 { get; set; }
+        public string Udf7 { get; set; }
+        public string Udf8 { get; set; }
+        public string Udf9 { get; set; }
+        public string Udf10 { get; set; }
+        public string Udf11 { get; set; }
+        public string Udf12 { get; set; }
+        public string Udf13 { get; set; }
+        public string Udf14 { get; set; }
+        public string Udf15 { get; set; }
+        public string Udf16 { get; set; }
+        public string Udf17 { get; set; }
+        public string Udf18 { get; set; }
+        public string Udf19 { get; set; }
+        public string Udf20 { get; set; }
+        public string maskedCard { get; set; }
+        public string brandType { get; set; }
+        public string tranType { get; set; }
         public string TrackId { get; set; }
         public string Auth { get; set; }
         public string Amt { get; set; }
