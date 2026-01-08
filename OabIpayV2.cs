@@ -182,7 +182,7 @@ namespace OAB
         public string Result { get; set; }
         public string PaymentId { get; set; }
         public string TranId { get; set; }
-        public string TokenNo { get; set; }
+        public string TokenNumber { get; set; }
         public string Date { get; set; }
         public string Udf1 { get; set; }
         public string Udf2 { get; set; }
@@ -204,9 +204,9 @@ namespace OAB
         public string Udf18 { get; set; }
         public string Udf19 { get; set; }
         public string Udf20 { get; set; }
-        public string maskedCard { get; set; }
-        public string brandType { get; set; }
-        public string tranType { get; set; }
+        public string MaskedCard { get; set; }
+        public string BrandType { get; set; }
+        public string TranType { get; set; }
         public string TrackId { get; set; }
         public string Auth { get; set; }
         public string Amt { get; set; }
@@ -214,7 +214,6 @@ namespace OAB
         public string Currency { get; set; }
         public string Error { get; set; }
         public string ErrorText { get; set; }
-        public string TokenNo { get; set; }
         public string TranDate { get; set; }
         public string TranRequestDate { get; set; }
         public string TranResponseDate { get; set; }
@@ -451,32 +450,61 @@ namespace OAB
             var json = JsonSerializer.Deserialize<JsonElement>(response);
             var reply = new Reply
             {
-                Result = json.GetProperty("result").GetString(),
-                PaymentId = json.GetProperty("paymentid").GetString(),
-                TranId = json.GetProperty("tranid").GetString(),
-                Ref = json.GetProperty("ref").GetString(),
-                Amt = json.GetProperty("amt").GetString(),
-                Auth = json.GetProperty("auth").GetString(),
+                Result = GetStringOrNull(json, "result"),
+                PaymentId = GetStringOrNull(json, "paymentid"),
+                TranId = GetStringOrNull(json, "tranid"),
+                Ref = GetStringOrNull(json, "ref"),
+                Amt = GetStringOrNull(json, "amt"),
+                Auth = GetStringOrNull(json, "auth"),
 
-                Udf1 = json.GetProperty("udf1").GetString(),
-                Udf2 = json.GetProperty("udf2").GetString(),
-                Udf3 = json.GetProperty("udf3").GetString(),
-                Udf4 = json.GetProperty("udf4").GetString(),
-                Udf5 = json.GetProperty("udf5").GetString(),
+                Udf1 = GetStringOrNull(json, "udf1"),
+                Udf2 = GetStringOrNull(json, "udf2"),
+                Udf3 = GetStringOrNull(json, "udf3"),
+                Udf4 = GetStringOrNull(json, "udf4"),
+                Udf5 = GetStringOrNull(json, "udf5"),
 
-                TranResponseDate = json.GetProperty("tranResponseDate").GetString(),
-                TranRequestDate = json.GetProperty("tranRequestDate").GetString(),
-                TranDate = json.GetProperty("tranDate").GetString(),
+                Udf6 = GetStringOrNull(json, "udf6"),
+                Udf7 = GetStringOrNull(json, "udf7"),
+                Udf8 = GetStringOrNull(json, "udf8"),
+                Udf9 = GetStringOrNull(json, "udf9"),
+                Udf10 = GetStringOrNull(json, "udf10"),
 
-                TrackId = json.TryGetProperty("trackid", out var track) ? track.GetString() : null,
-                TokenNo = null, // not available in this JSON
-                Error = json.TryGetProperty("Error", out var err) ? err.GetString() : null,
-                ErrorText = json.TryGetProperty("ErrorText", out var errTxt) ? errTxt.GetString() : null,
-                Currency = json.TryGetProperty("currency", out var curr) ? curr.GetString() : null,
-                Date = null, // 'date' field not available
+                Udf11 = GetStringOrNull(json, "udf11"),
+                Udf12 = GetStringOrNull(json, "udf12"),
+                Udf13 = GetStringOrNull(json, "udf13"),
+                Udf14 = GetStringOrNull(json, "udf14"),
+                Udf15 = GetStringOrNull(json, "udf15"),
+
+                Udf16 = GetStringOrNull(json, "udf16"),
+                Udf17 = GetStringOrNull(json, "udf17"),
+                Udf18 = GetStringOrNull(json, "udf18"),
+                Udf19 = GetStringOrNull(json, "udf19"),
+                Udf20 = GetStringOrNull(json, "udf20"),
+
+                BrandType = GetStringOrNull(json, "brandType"),
+                TranType = GetStringOrNull(json, "tranType"),
+                MaskedCard = GetStringOrNull(json, "maskedCard"),
+
+                TranResponseDate = GetStringOrNull(json, "tranResponseDate"),
+                TranRequestDate = GetStringOrNull(json, "tranRequestDate"),
+                TranDate = GetStringOrNull(json, "tranDate"),
+
+                TrackId = GetStringOrNull(json, "trackid"),
+                TokenNumber = GetStringOrNull(json, "tokencustid"),
+                Error = GetStringOrNull(json, "Error"),
+                ErrorText = GetStringOrNull(json, "ErrorText"),
+                Currency = GetStringOrNull(json, "currency"),
+                Date = null, 
             };
 
             return reply;
+        }
+
+        static string? GetStringOrNull(JsonElement obj, string name)
+        {
+            if (!obj.TryGetProperty(name, out var prop)) return null;
+            if (prop.ValueKind == JsonValueKind.Null || prop.ValueKind == JsonValueKind.Undefined) return null;
+            return prop.GetString();
         }
     }
 }

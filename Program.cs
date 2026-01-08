@@ -9,6 +9,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.IO.Compression;
 using System.Xml.Linq;
+using OabIpay_Console;
 
 namespace OAB
 {
