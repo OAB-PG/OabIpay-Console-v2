@@ -1,151 +1,270 @@
-# OAB iPay Merchant Integration
+# OAB iPay Merchant Integration (C#)
 
-## Introduction
-This document outlines the steps required for a merchant to integrate with the OAB payment gateway. The integration will enable merchants to initiate payments, handle responses, and ensure secure transaction processing.
+## Overview
+This guide explains how to integrate with **OAB iPay** to process:
+- **Purchase**
+- **Inquiry**
+- **Reversal**
+- **Refund**
+
+It also covers:
+- **UDF1..UDF20** in request/response (optional)
+- Response fields: **TokenNumber**, **BrandType**, **MaskedCard**
+- How to interpret **Result** codes
+- TrackId usage (must be unique)
+
+---
 
 ## Prerequisites
-Before starting the integration, ensure the following:
-- Key credentials:
-  - Id (tranportalId)
-  - Password
-  - ResourceKey
-- Secure communication over HTTPS
+You will receive the following credentials from OAB:
+- `tranportalId` (Id)
+- `password`
+- `resourceKey`
 
-## Transaction Types
-### Purchase Transaction
-#### Request Processing:
+You must provide:
+- `ResponseURL` (success callback)
+- `ErrorURL` (failure callback)
+
+> Always use HTTPS.
+
+---
+
+## TrackId Rules (Important)
+- `TrackId` must be **unique for every transaction request** you send (Purchase / Inquiry / Reversal / Refund).
+- Do not reuse the same TrackId across different transactions.
+- Recommended: use a UUID or your own sequence (with timestamp) to avoid collisions.
+
+Example:
+- `TrackId = "PAY-20260108-000001"`
+- `TrackId = "PAY-20260108-000002"`
+
+---
+
+## Request Fields (Minimum)
+For most transactions, you will use:
+- `Id`, `Password`, `ResourceKey`
+- `Mode` (`SANDBOX` or `PRODUCTION`) — primarily for Purchase
+- `TrackId` (**unique**)
+- `Amt`, `CurrencyCode` (commonly required for Inquiry/Reversal/Refund as per gateway expectation)
+- `ResponseURL`, `ErrorURL` (Purchase)
+
+> Note: Some SDKs use `Trackid` (lowercase `i`) instead of `TrackId`. Use the exact property name available in your model.
+
+---
+
+## UDF Fields (UDF1..UDF20) — Optional
+UDF fields are **merchant-defined metadata**. Common examples include:
+- Customer **Email**
+- **Student Number**
+- **Mobile Number**
+- Internal reference IDs, session IDs, etc.
+
+> Recommendation: keep the meaning of each UDF consistent (example: `Udf1=email`, `Udf2=studentNo`, `Udf3=mobile`).
+
+### Example (set individually as needed)
 ```csharp
-// Define key details
-string tranportalId = "your_tranportal_id";
-string password = "your_password";
-string resourceKey = "your_resource_key";
-string mode = "SANDBOX"; // SANDBOX , PRODUCTION
-string currency = "512";
-string language = "EN";
-string receiptURL = "https://merchant.com/responseurl/";
-string errorURL = "https://merchant.com/errorurl/";
-string trackid = "87234234234";
+// UDF fields are optional. Set only the fields you need.
+req.Udf1 = "student1@college.edu";   // Email
+req.Udf2 = "STU-2026-000123";        // Student Number
+req.Udf3 = "+9689XXXXXXX";           // Mobile Number
 
-// Create a new request instance
-Request req = new Request();
+// Up to Udf20 is supported when required:
+// req.Udf4 = "...";
+// ...
+// req.Udf20 = "...";
+```
 
-// Set required fields
-req.Id = tranportalId;
-req.Password = password;
-req.ResourceKey = resourceKey;
-req.Mode = mode;
-req.CurrencyCode = currency;
-req.LangId = language;
-req.ResponseURL = receiptURL;
-req.ErrorURL = errorURL;
-req.Amt = amount;
-req.TrackId = trackid;
+---
 
-// Set user-defined fields
-req.Udf1 = "User Defined value 1";
-req.Udf2 = "User Defined value 2";
-req.Udf3 = "User Defined value 3";
-req.Udf4 = "User Defined value 4";
-req.Udf5 = "User Defined value 5";
+# Token Payments (Using TokenNumber)
 
-// For Token transactions (Optional)
-req.TokenNo = tokenNo;
-req.TokenFlag = tokenFlag;
+## When to use
+After a successful **Purchase**, the gateway may return a token in:
+- `reply.TokenNumber`
 
-// Enable split payment (Optional)
-req.SplitPaymentIndicator = "1";
+You can store this token securely and use it for future token-based purchases.
 
-// Create and configure split payment payload (Optional)
-SplitPaymentPayload splitPayLoad = new SplitPaymentPayload();
-string splittrackid = "87234234234932334";
-splitPayLoad.AliasName = "account001";
-splitPayLoad.Notes = "Salary";
-splitPayLoad.Type = "1";
-splitPayLoad.Reference = splittrackid;
-splitPayLoad.SplitAmount = "10";
+## How to send token in the next Purchase
+- Set `TokenFlag = 2`
+- Set `TokenNumber` to the value received in the earlier purchase (`reply.TokenNumber`)
 
-// Add split payment details to the request (Optional)
-req.AddSplitPaymentPayload(splitPayLoad);
+> Field names can differ by SDK (`TokenNumber` vs `TokenNo`). Use the field name available in your Request model.
 
-// Prepare the request transaction data
+### Example
+```csharp
+// From a previous successful purchase response:
+string storedTokenNumber = reply.TokenNumber; // store this securely
+
+// In the next purchase request:
+req.TokenFlag   = "2";
+req.TokenNumber = storedTokenNumber; // or req.TokenNo = storedTokenNumber (based on your SDK)
+```
+
+---
+
+# Purchase
+
+## 1) Build Purchase Request
+```csharp
+Request req = new Request
+{
+    Id          = "your_tranportal_id",
+    Password    = "your_password",
+    ResourceKey = "your_resource_key",
+
+    Mode         = "SANDBOX",   // SANDBOX / PRODUCTION
+    CurrencyCode = "512",
+    LangId       = "EN",
+
+    ResponseURL = "https://merchant.com/responseurl/",
+    ErrorURL    = "https://merchant.com/errorurl/",
+
+    TrackId = "PAY-20260108-000001",   // must be unique
+    Amt     = "10.00"
+};
+
+// Optional: UDF1..UDF20 (set only what you need)
+req.Udf1 = "student1@college.edu";   // Email
+req.Udf2 = "STU-2026-000123";        // Student Number
+req.Udf3 = "+9689XXXXXXX";           // Mobile Number
+
+// Prepare request transaction data
 RequestTranData reqTranData = OabIpayRequestBuilder.PrepareRequestTranData(req);
 ```
 
-#### Form Submission:
+## 2) Post Form to Gateway
 ```html
-<form action="<%=reqTranData.WebAddress %>" method="post">
-   <input type="hidden" name="tranportalId" value="<%= reqTranData.TranportalId%>" />
-   <input type="hidden" name="responseURL" value="<%= reqTranData.ResponseURL%>" />
-   <input type="hidden" name="errorURL" value="<%= reqTranData.ErrorURL%>" />
-   <input type="hidden" name="trandata" value="<%= reqTranData.TranData%>" />
-   <button type="submit">Submit</button>
+<form action="<%= reqTranData.WebAddress %>" method="post">
+  <input type="hidden" name="tranportalId" value="<%= reqTranData.TranportalId %>" />
+  <input type="hidden" name="responseURL"  value="<%= reqTranData.ResponseURL %>" />
+  <input type="hidden" name="errorURL"     value="<%= reqTranData.ErrorURL %>" />
+  <input type="hidden" name="trandata"     value="<%= reqTranData.TranData %>" />
+  <button type="submit">Pay Now</button>
 </form>
 ```
 
-### Response Processing
+---
+
+# Response Handling (Purchase / Refund / Reversal)
+
+## Decrypt and Parse Reply
 ```csharp
-// Define key details
-string tranportalId = "your_tranportal_id";
-string password = "your_password";
-string resourceKey = "your_resource_key";
+ReplyTranData tranData = new ReplyTranData
+{
+    Id          = "your_tranportal_id",
+    Password    = "your_password",
+    ResourceKey = "your_resource_key",
+    TranData    = request["trandata"],
+    TrackId     = request["trackId"]
+};
 
-// Retrieve parameters from request
-string replyTranData = request["trandata"];
-string trackId = request["trackId"];
-
-// Create a new ReplyTranData instance and set values
-ReplyTranData tranData = new ReplyTranData();
-tranData.Id = tranportalId;
-tranData.Password = password;
-tranData.ResourceKey = resourceKey;
-tranData.TranData = replyTranData;
-tranData.TrackId = trackId;
-
-// Process the transaction response
 Reply reply = OabIpayReplyBuilder.PrepareReply(tranData);
-
-// Retrieve result details
-var result = reply.Result;
-var date = reply.Date;
-var refId = reply.Ref;
-var auth = reply.Auth;
-var trackId = reply.TrackId;
-var tranId = reply.TranId;
-var amt = reply.Amt;
-var udf1 = reply.Udf1;
-var udf2 = reply.Udf2;
-var udf3 = reply.Udf3;
-var udf4 = reply.Udf4;
-var udf5 = reply.Udf5;
-var paymentId = reply.PaymentId;
-var tokenNo = reply.TokenNo;
-var tranDate = reply.TranDate;
-var tranRequestDate = reply.TranRequestDate;
-var tranResponseDate = reply.TranResponseDate;
 ```
 
-### Inquiry Transaction
+## Fields to Read From the Response
+Use `reply` to read the fields you need for reconciliation and customer display.
+
+### Common fields (recommended)
+- `reply.Result`
+- `reply.PaymentId`
+- `reply.TranId`
+- `reply.Ref`
+- `reply.Auth`
+- `reply.TrackId`
+- `reply.Amt`
+
+### UDF fields (if sent)
+- `reply.Udf1` ... `reply.Udf20`
+
+### Token / card fields (if provided by gateway)
+- `reply.TokenNumber`
+- `reply.BrandType`
+- `reply.MaskedCard`
+
+---
+
+# Result Codes (Success / Failure)
+
+The primary status field is:
+- `reply.Result`
+
+### Common result values
+- **Success (typical):** `CAPTURED`, `SUCCESS`, `APPROVED`
+- **Failure (typical):** `NOT CAPTURED`, `NOT APPROVED`
+
+### Transaction-specific guidance
+- **Purchase**
+  - `CAPTURED` = success
+  - `NOT CAPTURED` = failure
+- **Inquiry**
+  - `SUCCESS` = success
+- **Approval-style responses (if applicable)**
+  - `APPROVED` = success
+  - `NOT APPROVED` = failure
+
+> Always treat any unexpected/unknown `Result` value as **non-success** and handle it safely.
+
+---
+
+# Inquiry
+
+## Inquiry by TrackId
 ```csharp
-Reply reply = new OabIpayConnection().ProcessInquiryByTranId(req);
-var result = reply.Result;
+Request request = new Request();
+request.TransId      = "original transaction track id"; // reference to original purchase track id (if required by your SDK)
+request.Trackid      = "PAY-20260108-000002";            // must be unique for this inquiry request
+request.Amt          = "10";
+request.CurrencyCode = "512";
+
+Reply reply = new OabIpayConnection().ProcessInquiryByTrackId(request);
 ```
 
-### Reversal Transaction
+## Inquiry by TranId (Transaction Id)
 ```csharp
-Reply reply = new OabIpayConnection().ProcessReversalByTranId(req);
-var result = reply.Result;
+Request request = new Request();
+request.TransId      = "original transaction transaction id";
+request.Trackid      = "PAY-20260108-000003"; // must be unique for this inquiry request
+request.Amt          = "10";
+request.CurrencyCode = "512";
+
+Reply reply = new OabIpayConnection().ProcessInquiryByTranId(request);
 ```
 
-### Refund Transaction
+---
+
+# Reversal (by TranId)
 ```csharp
-Reply reply = new OabIpayConnection().ProcessRefundByTranId(req);
-var result = reply.Result;
+Request request = new Request();
+request.TransId      = "original transaction transaction id";
+request.Trackid      = "PAY-20260108-000004"; // must be unique for this reversal request
+request.Amt          = "10";
+request.CurrencyCode = "512";
+
+Reply reply = new OabIpayConnection().ProcessReversalByTranId(request);
 ```
 
-## Security Guidelines
-- Use HTTPS for all API calls.
-- Store API keys securely and never expose them in client-side code.
+---
+
+# Refund (by TranId)
+```csharp
+Request request = new Request();
+request.TransId      = "original transaction transaction id";
+request.Trackid      = "PAY-20260108-000005"; // must be unique for this refund request
+request.Amt          = "10";
+request.CurrencyCode = "512";
+
+Reply reply = new OabIpayConnection().ProcessRefundByTranId(request);
+```
+
+---
+
+## Security Notes
+- Use HTTPS for all callbacks and API communication
+- Never expose `Password` / `ResourceKey` in frontend code
+- Store TokenNumber securely (do not expose in client-side code)
+- Avoid logging sensitive values; prefer masked/tokenized values
+
+---
 
 ## Support
-For any issues or questions, contact our support team at **pg-support@oman-arabbank.com**.
-
+For integration support, contact: **pg-support@oman-arabbank.com**
