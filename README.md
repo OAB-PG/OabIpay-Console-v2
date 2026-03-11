@@ -80,7 +80,7 @@ req.Udf3 = "+9689XXXXXXX";           // Mobile Number
 
 ## When to use
 After a successful **Purchase**, the gateway may return a token in:
-- `reply.TokenNumber`
+- `reply.TokenCustId`
 
 You can store this token securely and use it for future token-based purchases.
 
