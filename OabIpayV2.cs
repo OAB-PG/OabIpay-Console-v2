@@ -183,7 +183,7 @@ namespace OAB
         public string PaymentId { get; set; }
         public string TranId { get; set; }
         public string TokenNumber { get; set; }
-        public string Tokencustid { get; set; }
+        public string TokenCustId { get; set; }
         public string Date { get; set; }
         public string Udf1 { get; set; }
         public string Udf2 { get; set; }
@@ -492,6 +492,7 @@ namespace OAB
 
                 TrackId = GetStringOrNull(json, "trackid"),
                 TokenNumber = GetStringOrNull(json, "tokencustid"),
+                TokenCustId = GetStringOrNull(json, "tokencustid"),
                 Error = GetStringOrNull(json, "Error"),
                 ErrorText = GetStringOrNull(json, "ErrorText"),
                 Currency = GetStringOrNull(json, "currency"),
